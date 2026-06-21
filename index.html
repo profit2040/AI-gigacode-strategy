@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GigaCode — как утроить число корпоративных клиентов за год</title>
+<style>
+
+:root{
+  --sber-green: #21A038;
+  --sber-green-dark: #0A6E2D;
+  --sber-green-deep: #043017;
+  --sber-mint: #58D180;
+  --sber-lime: #BEDC4B;
+  --ink: #0B1210;
+  --paper: #F7F8F4;
+  --paper-dim: #ECEEE6;
+  --line: rgba(11,18,16,0.10);
+  --line-strong: rgba(11,18,16,0.18);
+  --muted: #5B6760;
+  --white: #FFFFFF;
+  --warn: #B3461F;
+  --warn-bg: #FBEFE8;
+  --gold: #C99A2E;
+  --gold-bg: #FBF3E0;
+  --sidebar-w: 292px;
+
+  --display: "Sber Display", "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --body: "SB Sans Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SF Mono", "IBM Plex Mono", "Consolas", monospace;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.01ms !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+}
+a{color:inherit;}
+::selection{background:var(--sber-lime); color:var(--ink);}
+img,svg{max-width:100%;}
+
+.progress-rail{position:fixed; top:0; left:0; right:0; height:3px; background:transparent; z-index:200;}
+.progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--sber-green),var(--sber-lime)); transition:width .1s linear;}
+
+.topbar{
+  display:none; position:sticky; top:0; z-index:150;
+  background:var(--ink); color:var(--paper);
+  height:56px; align-items:center; justify-content:space-between; padding:0 16px;
+}
+.topbar .brandmark{display:flex; align-items:center; gap:8px; font-family:var(--display); font-weight:700; font-size:13px;}
+.topbar .ring{width:18px;height:18px;border-radius:50%;background:conic-gradient(from 220deg,var(--sber-green),var(--sber-mint),var(--sber-lime),var(--sber-green)); position:relative;}
+.topbar .ring::after{content:"";position:absolute;inset:4px;background:var(--ink);border-radius:50%;}
+.menu-btn{background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:var(--paper); width:36px;height:36px;border-radius:8px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.menu-btn svg{width:18px;height:18px;}
+
+.shell{display:flex; min-height:100vh;}
+
+.sidebar{
+  width:var(--sidebar-w); flex:none; background:var(--ink); color:var(--paper);
+  position:sticky; top:0; height:100vh; overflow-y:auto; padding:28px 20px 30px;
+  border-right:1px solid rgba(255,255,255,0.08);
+}
+.sidebar::-webkit-scrollbar{width:6px;}
+.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.18); border-radius:3px;}
+.sb-brand{display:flex; align-items:center; gap:10px; margin-bottom:24px;}
+.sb-brand .ring{width:24px;height:24px;border-radius:50%;background:conic-gradient(from 220deg,var(--sber-green),var(--sber-mint),var(--sber-lime),var(--sber-green)); position:relative; flex:none;}
+.sb-brand .ring::after{content:"";position:absolute;inset:5px;background:var(--ink);border-radius:50%;}
+.sb-brand .name{font-family:var(--display); font-weight:700; font-size:14px; line-height:1.3;}
+.sb-group{margin-bottom:4px;}
+.sb-group-label{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:rgba(247,248,244,0.35); padding:12px 10px 6px;}
+.sb-link{display:flex; align-items:center; gap:10px; padding:7.5px 10px; border-radius:8px; font-size:12.7px; color:rgba(247,248,244,0.68); text-decoration:none; cursor:pointer; transition:background .15s, color .15s; border:1px solid transparent;}
+.sb-link .dot{width:5px;height:5px;border-radius:50%; background:rgba(247,248,244,0.25); flex:none; transition:background .15s, transform .15s;}
+.sb-link:hover{background:rgba(255,255,255,0.06); color:var(--paper);}
+.sb-link.active{background:rgba(33,160,56,0.16); color:var(--white); border-color:rgba(33,160,56,0.35);}
+.sb-link.active .dot{background:var(--sber-mint); transform:scale(1.6);}
+.sb-link:focus-visible{outline:2px solid var(--sber-mint); outline-offset:1px;}
+.sb-foot{margin-top:22px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.08); font-size:10.3px; color:rgba(247,248,244,0.35); line-height:1.6;}
+
+.main{flex:1; min-width:0;}
+.page-wrap{max-width:920px; margin:0 auto; padding:0 48px;}
+
+.hero{
+  position:relative;
+  background:
+    radial-gradient(900px 480px at 88% -10%, rgba(33,160,56,0.20), transparent 60%),
+    radial-gradient(700px 420px at 6% 0%, rgba(190,220,75,0.14), transparent 55%),
+    var(--ink);
+  color:var(--paper); padding:88px 0 68px; overflow:hidden;
+}
+.hero::before{
+  content:""; position:absolute; inset:0;
+  background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+  background-size:56px 56px;
+  mask-image:linear-gradient(to bottom, transparent, rgba(0,0,0,0.55) 30%, transparent 85%);
+  pointer-events:none;
+}
+.hero .page-wrap{position:relative; z-index:2; padding-left:48px; padding-right:48px;}
+.hero h1{font-family:var(--display); font-weight:680; letter-spacing:-0.01em; font-size:clamp(28px,4vw,44px); line-height:1.14; color:var(--white); margin:0;}
+.hero h1 em{font-style:normal; background:linear-gradient(95deg,var(--sber-mint),var(--sber-lime)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.hero .lede{color:rgba(247,248,244,0.8); margin-top:18px; font-size:16.5px; max-width:660px;}
+.hero-meta{display:flex; gap:28px; margin-top:40px; flex-wrap:wrap; border-top:1px solid rgba(255,255,255,0.14); padding-top:22px;}
+.hero-meta .item{font-size:11.5px; color:rgba(247,248,244,0.5); max-width:175px;}
+.hero-meta .item b{display:block; color:var(--white); font-family:var(--mono); font-size:12.5px; margin-bottom:4px; font-weight:500;}
+
+section.doc-section{padding:60px 0; border-bottom:1px solid var(--line);}
+section.doc-section:last-of-type{border-bottom:none;}
+h2{font-family:var(--display); font-weight:680; letter-spacing:-0.01em; font-size:clamp(22px,2.6vw,29px); line-height:1.2; margin:0 0 12px;}
+h3{font-family:var(--display); font-weight:650; font-size:18px; line-height:1.32; margin:0 0 9px;}
+h4{font-family:var(--display); font-weight:650; font-size:15px; margin:0 0 7px;}
+p{margin:0 0 13px;}
+.lede{font-size:15.5px; color:#2B362F; max-width:700px;}
+.muted{color:var(--muted);}
+
+.stat-row{display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin:20px 0;}
+@media (max-width:680px){.stat-row{grid-template-columns:1fr;}}
+.stat{background:var(--white); border:1px solid var(--line); border-radius:13px; padding:17px 17px 15px;}
+.stat .v{font-family:var(--display); font-weight:700; font-size:22px; color:var(--sber-green-dark); line-height:1.2;}
+.stat .l{font-size:11px; color:var(--muted); margin-top:6px; line-height:1.45;}
+.stat.gold .v{color:var(--gold);}
+
+.quote-block{background:var(--ink); color:var(--paper); border-radius:15px; padding:25px 27px; position:relative; margin:20px 0;}
+.quote-block::before{content:"\201C"; font-family:var(--display); font-size:48px; color:var(--sber-mint); position:absolute; top:3px; left:18px; line-height:1; opacity:.5;}
+.quote-block p{font-family:var(--display); font-weight:540; font-size:15px; line-height:1.5; color:var(--paper); position:relative; z-index:1; margin-bottom:0;}
+.quote-block .src{margin-top:12px; font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:rgba(247,248,244,0.5);}
+
+.note{background:var(--paper-dim); border-left:3px solid var(--sber-green); border-radius:10px; padding:14px 17px; font-size:12.9px; margin:16px 0; line-height:1.55;}
+.note b{font-family:var(--display); font-weight:650; font-size:13px; color:var(--sber-green-dark); display:block; margin-bottom:5px;}
+.note.warn{border-left-color:var(--warn); background:var(--warn-bg);}
+.note.warn b{color:#7A2F12;}
+.note.gold{border-left-color:var(--gold); background:var(--gold-bg);}
+.note.gold b{color:#8A6A1E;}
+
+/* ---- ТАБЛИЦЫ: контролируемая ширина колонок ---- */
+.tbl-wrap{overflow-x:auto; border-radius:13px; border:1px solid var(--line); margin:17px 0;}
+table{width:100%; border-collapse:collapse; min-width:580px; table-layout:fixed;}
+thead th{background:var(--ink); color:var(--paper); font-family:var(--mono); font-size:9.8px; letter-spacing:.04em; text-transform:uppercase; font-weight:500; padding:11px 13px; text-align:left;}
+tbody td{padding:12px 13px; font-size:12.6px; border-bottom:1px solid var(--line); vertical-align:top; word-wrap:break-word; line-height:1.5;}
+tbody tr:last-child td{border-bottom:none;}
+tbody td:first-child{font-weight:620; color:var(--ink);}
+tbody tr.hl td{background:rgba(33,160,56,0.06);}
+tbody tr.hl td:first-child{color:var(--sber-green-dark);}
+tbody tr.gold-row td{background:rgba(201,154,46,0.07);}
+.tag-good{color:var(--sber-green-dark); font-weight:600;}
+.tag-bad{color:var(--warn);}
+
+/* узкие именные колонки для конкретных таблиц через классы */
+.col-narrow{width:13%;}
+.col-mid{width:18%;}
+.col-wide{width:auto;}
+
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:28px; margin:16px 0;}
+@media (max-width:680px){.two-col{grid-template-columns:1fr;}}
+.plain-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+.plain-list li{display:flex; gap:10px; align-items:flex-start; font-size:13px; color:#2B362F; padding-bottom:9px; border-bottom:1px solid var(--line); line-height:1.55;}
+.plain-list li:last-child{border-bottom:none; padding-bottom:0;}
+.plain-list .tag{flex:none; width:20px;height:20px;border-radius:6px; background:var(--paper-dim); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:9.5px; color:var(--sber-green-dark); font-weight:600; margin-top:1px;}
+
+.cards3{display:grid; grid-template-columns:repeat(3,1fr); gap:13px; margin:16px 0;}
+@media (max-width:760px){.cards3{grid-template-columns:1fr;}}
+.card{background:var(--white); border:1px solid var(--line); border-radius:13px; padding:17px 16px;}
+.card h4{font-size:13.5px; margin-bottom:7px;}
+.card p{font-size:12px; color:#3B463E; margin-bottom:0; line-height:1.55;}
+
+/* ---- ИТОГОВЫЙ БЛОК (бывший decision): текст не съезжает, читается как заключение ---- */
+.verdict{background:linear-gradient(135deg,var(--sber-green-deep),var(--sber-green-dark)); color:var(--paper); border-radius:17px; padding:28px 27px; margin:18px 0;}
+.verdict h3{color:var(--white); margin-bottom:11px; font-size:18px;}
+.verdict p{color:rgba(247,248,244,0.88); font-size:13.5px; line-height:1.6; margin-bottom:12px;}
+.verdict p:last-of-type{margin-bottom:0;}
+.verdict b{color:var(--sber-lime); font-weight:650;}
+.verdict .skip{margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.18); font-size:12px; color:rgba(247,248,244,0.62); line-height:1.6;}
+.verdict .skip b{color:rgba(247,248,244,0.85);}
+
+/* ---- двухфазная схема (новый элемент) ---- */
+.phase-stage{background:var(--paper-dim); border-radius:18px; padding:30px 28px; margin:20px 0;}
+.phase-row{display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:center;}
+@media (max-width:680px){.phase-row{grid-template-columns:1fr; gap:14px;}}
+.phase-box{background:var(--white); border:1.5px solid var(--line-strong); border-radius:14px; padding:20px 20px 18px;}
+.phase-box.active{border-color:var(--sber-green); box-shadow:0 14px 30px -20px rgba(33,160,56,0.45);}
+.phase-box .ph-label{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+.phase-box.active .ph-label{color:var(--sber-green-dark);}
+.phase-box h4{font-size:15.5px; margin-bottom:9px;}
+.phase-box p{font-size:12.3px; color:#3B463E; margin-bottom:0; line-height:1.55;}
+.phase-arrow{display:flex; align-items:center; justify-content:center; color:var(--sber-green); flex:none;}
+.phase-arrow svg{width:28px; height:28px;}
+@media (max-width:680px){.phase-arrow svg{transform:rotate(90deg);}}
+
+.risk-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:16px 0;}
+@media (max-width:600px){.risk-grid{grid-template-columns:1fr;}}
+.risk{background:var(--white); border-radius:12px; padding:16px 17px; border:1px solid var(--line);}
+.risk .rk-num{font-family:var(--display); font-weight:700; font-size:13px; color:var(--sber-green-dark); margin-bottom:6px;}
+.risk p{font-size:12.2px; color:#3B463E; margin-bottom:0; line-height:1.55;}
+
+/* ---- МЕТРИКИ: единый формат для всех ---- */
+.metric-card{background:var(--white); border:1px solid var(--line); border-radius:13px; padding:18px 19px 17px; margin-bottom:11px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+.metric-card .mc-left{flex:1; min-width:200px;}
+.metric-card h4{font-size:13.6px; margin-bottom:6px; color:var(--ink);}
+.metric-card .mc-desc{font-size:11.8px; color:var(--muted); line-height:1.5; margin:0;}
+.metric-card .mc-value{flex:none; text-align:right;}
+.metric-card .mc-value .num{font-family:var(--display); font-weight:700; font-size:19px; color:var(--sber-green-dark); line-height:1.1;}
+.metric-card .mc-value .cap{font-family:var(--mono); font-size:9.5px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-top:3px;}
+
+/* ---- РАСЧЁТЫ как экспертные таблицы ---- */
+.calc-intro{font-size:13.3px; color:#2B362F; margin:14px 0 12px; line-height:1.6;}
+.calc-table-wrap{overflow-x:auto; border-radius:13px; border:1.5px solid var(--sber-green); margin:14px 0 20px;}
+.calc-table{width:100%; border-collapse:collapse; min-width:520px;}
+.calc-table thead th{background:var(--sber-green-deep); color:var(--paper); font-family:var(--mono); font-size:9.8px; letter-spacing:.04em; text-transform:uppercase; font-weight:500; padding:10px 14px; text-align:left;}
+.calc-table tbody td{padding:10px 14px; font-size:12.6px; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.5;}
+.calc-table tbody tr:last-child td{border-bottom:none;}
+.calc-table tbody td:nth-child(1){color:var(--muted); font-family:var(--mono); font-size:11px; width:34px;}
+.calc-table tbody td:nth-child(3){font-family:var(--mono); font-weight:600; color:var(--ink); text-align:right; white-space:nowrap;}
+.calc-table tbody tr.subtotal td{background:rgba(33,160,56,0.08); font-weight:650;}
+.calc-table tbody tr.subtotal td:nth-child(3){color:var(--sber-green-dark); font-size:13.5px;}
+
+.day-grid{display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:13px; overflow:hidden; margin:16px 0;}
+@media (max-width:760px){.day-grid{grid-template-columns:1fr;}}
+.day-col{padding:19px 17px; border-right:1px solid var(--line);}
+.day-col:last-child{border-right:none;}
+.day-col .when{font-family:var(--display); font-weight:700; font-size:13px; color:var(--sber-green-dark); margin-bottom:6px;}
+.day-col h4{font-size:13.5px; margin-bottom:9px;}
+.day-col ul{margin:0; padding-left:15px;}
+.day-col li{font-size:11.5px; margin-bottom:6px; color:#2B362F; line-height:1.5;}
+
+.horizon-track{position:relative; margin-top:8px;}
+.horizon-track::before{content:""; position:absolute; left:17px; top:4px; bottom:4px; width:2px; background:linear-gradient(to bottom,var(--sber-green),var(--line-strong));}
+.horizon-item{position:relative; padding-left:54px; padding-bottom:32px;}
+.horizon-item:last-child{padding-bottom:0;}
+.horizon-dot{position:absolute; left:0; top:0; width:36px;height:36px;border-radius:50%; background:var(--white); border:2px solid var(--sber-green); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:11px; color:var(--sber-green-dark); z-index:2; text-align:center; line-height:1.15;}
+.horizon-item.far .horizon-dot{border-color:var(--line-strong); color:var(--muted);}
+.horizon-head{margin-bottom:9px;}
+.horizon-head h4{font-size:16.5px; margin:0;}
+.horizon-body{color:#2B362F; font-size:13.5px; max-width:680px; line-height:1.6;}
+.horizon-body ul{margin:8px 0 0; padding-left:18px;}
+.horizon-body li{margin-bottom:6px;}
+
+.rank-list{display:flex; flex-direction:column; gap:2px; margin:16px 0;}
+.rank-item{display:grid; grid-template-columns:30px 1fr 130px; gap:12px; align-items:center; padding:10px 14px; border-radius:8px; font-size:12.4px;}
+.rank-item .rn{font-family:var(--display); font-weight:700; font-size:14px; color:var(--sber-green-dark);}
+.rank-item .rbar-wrap{background:var(--paper-dim); border-radius:6px; height:9px; overflow:hidden;}
+.rank-item .rbar{height:100%; background:linear-gradient(90deg,var(--sber-green),var(--sber-mint)); border-radius:6px;}
+.rank-item .rval{font-family:var(--mono); font-size:10.5px; text-align:right; color:var(--sber-green-dark); font-weight:600; line-height:1.3;}
+.rank-item .rname{font-weight:600;}
+
+/* ---- допущения ---- */
+.assumption-list{display:flex; flex-direction:column; gap:10px; margin:16px 0;}
+.assumption{background:var(--white); border:1px solid var(--line); border-radius:11px; padding:13px 16px; font-size:12.6px; line-height:1.55; display:flex; gap:11px;}
+.assumption .a-num{flex:none; font-family:var(--display); font-weight:700; font-size:13px; color:var(--sber-green-dark); white-space:nowrap;}
+.assumption .a-text{color:#2B362F;}
+
+/* ---- источники ---- */
+.sources-box{background:var(--paper-dim); border-radius:12px; padding:16px 18px; margin:18px 0 0; font-size:11.8px; line-height:1.7;}
+.sources-box .sb-title{font-family:var(--display); font-weight:650; font-size:12.5px; color:var(--ink); margin-bottom:8px;}
+.sources-box ol{margin:0; padding-left:18px; color:var(--muted);}
+.sources-box li{margin-bottom:4px;}
+
+.divider{height:1px; background:var(--line); margin:30px 0;}
+
+footer{background:var(--ink); color:rgba(247,248,244,0.55); padding:34px 0; font-size:11.5px;}
+footer .page-wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;}
+
+.totop{position:fixed; bottom:24px; right:24px; z-index:120; width:40px;height:40px;border-radius:50%; background:var(--ink); color:var(--paper); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(0,0,0,0.25); cursor:pointer; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; border:1px solid rgba(255,255,255,0.15);}
+.totop.show{opacity:1; pointer-events:auto;}
+.totop:hover{transform:translateY(-2px);}
+.totop svg{width:15px;height:15px;}
+
+@media (max-width:920px){
+  .shell{flex-direction:column;}
+  .topbar{display:flex;}
+  .sidebar{position:fixed; top:56px; left:0; bottom:0; z-index:140; height:calc(100vh - 56px); transform:translateX(-100%); transition:transform .25s ease; width:min(85vw, 320px); box-shadow:8px 0 32px rgba(0,0,0,0.3);}
+  .sidebar.open{transform:translateX(0);}
+  .scrim{position:fixed; inset:56px 0 0 0; background:rgba(0,0,0,0.4); z-index:130; opacity:0; pointer-events:none; transition:opacity .2s;}
+  .scrim.show{opacity:1; pointer-events:auto;}
+  .page-wrap{padding:0 20px;}
+  .hero .page-wrap{padding-left:20px; padding-right:20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="topbar">
+  <div class="brandmark"><span class="ring"></span>GigaCode. План на год</div>
+  <div class="menu-btn" id="menuBtn" role="button" aria-label="Открыть меню разделов" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+  </div>
+</div>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand"><span class="ring"></span><span class="name">GigaCode<br>Утроить число клиентов за год</span></div>
+
+    <nav>
+      <div class="sb-group">
+        <div class="sb-group-label">С чего начинаю</div>
+        <a class="sb-link" data-target="situation"><span class="dot"></span>Что дано</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">Размер рынка</div>
+        <a class="sb-link" data-target="market-size"><span class="dot"></span>Сколько компаний реально подходит</a>
+        <a class="sb-link" data-target="regulatory"><span class="dot"></span>Почему закон работает на нас</a>
+        <a class="sb-link" data-target="competitive"><span class="dot"></span>Сравнение с конкурентами</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">Решения</div>
+        <a class="sb-link" data-target="segmentation"><span class="dot"></span>Сегментация рынка</a>
+        <a class="sb-link" data-target="buyer"><span class="dot"></span>Покупательский процесс</a>
+        <a class="sb-link" data-target="bet"><span class="dot"></span>Куда вложить ограниченный ресурс</a>
+        <a class="sb-link" data-target="onprem"><span class="dot"></span>On-Prem и его приоритеты</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">Деньги</div>
+        <a class="sb-link" data-target="roi-client"><span class="dot"></span>Расчёт выгоды для клиента</a>
+        <a class="sb-link" data-target="roi-product"><span class="dot"></span>Расчёт выгоды для нас</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">Контроль</div>
+        <a class="sb-link" data-target="metrics"><span class="dot"></span>Метрики</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">План действий</div>
+        <a class="sb-link" data-target="team-plan"><span class="dot"></span>Работа с командой по срокам</a>
+      </div>
+      <div class="sb-group">
+        <div class="sb-group-label">Допущения</div>
+        <a class="sb-link" data-target="risks"><span class="dot"></span>На чём строится расчёт</a>
+      </div>
+    </nav>
+
+    <div class="sb-foot">Каждая цифра здесь либо из открытого источника, либо из расчёта, который показан полностью. Где данных не хватало, это сказано прямо.</div>
+  </aside>
+
+  <main class="main">
+
+    <header class="hero">
+      <div class="page-wrap">
+        <h1>Утроить число корпоративных клиентов за год. Это задача не про продажи,<br>а про <em>доверие.</em></h1>
+        <p class="lede">Банк или телеком-оператор не выбирает между функциями продукта. Он выбирает, кому можно доверить код, который по закону не имеет права покинуть его периметр. Из трёх конкурентов, с которыми нас сравнивают, ни у SourceCraft, ни у Claude, ни у Cursor нет действующего и проверенного on-prem. У нас он есть. Дальше я показываю, как из этой разницы собрать конкретный план на год с цифрами на каждом шаге.</p>
+        <div class="hero-meta">
+          <div class="item"><b>Цель</b>В три раза больше корпоративных клиентов за 12 месяцев</div>
+          <div class="item"><b>Точка старта</b>Несколько крупных компаний уже работают на продукте</div>
+          <div class="item"><b>Кому продаём</b>Компании от тысячи разработчиков: банки, телеком, госсектор, IT</div>
+          <div class="item"><b>С кем сравнивают</b>SourceCraft, Claude, Cursor и локальные решения</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="doc-section" id="situation">
+      <div class="page-wrap">
+        <h2>Что дано и что я хочу сразу проговорить</h2>
+        <p class="lede">GigaCode сегодня не идея и не прототип. Это AI Chat, AI Agent, плагины для VS Code и JetBrains, CLI Agent, on-prem-инсталляция и интеграции с корпоративными системами. Продукт уже работает у нескольких крупных компаний. Значит, задача года не в том, чтобы доделать продукт, а в том, чтобы доказать рынку: мы единственный реалистичный выбор для тех, кому закон или служба безопасности не позволяет выбрать кого-то другого.</p>
+
+        <div class="assumption-list">
+          <div class="assumption"><span class="a-num">Допущение 1</span><span class="a-text">точное число действующих клиентов в условии не названо. Везде дальше, где это важно для расчёта, я беру рабочий диапазон от пяти до десяти крупных компаний на старте. Это обычная стартовая база для нового корпоративного продукта, прошедшего первые внедрения, и все производные цифры считаю как вилку от этого диапазона.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="market-size">
+      <div class="page-wrap">
+        <h2>Сколько компаний в России реально подходят под условие задачи</h2>
+        <p class="lede">Большинство оценок рынка ИИ-инструментов для разработки считают рынок целиком, от фрилансера до банка. Нам нужны компании с тысячей и более разработчиков, и это сильно сужает круг. Именно эта точность определяет, реалистична ли цель утроить клиентскую базу.</p>
+
+        <div class="stat-row">
+          <div class="stat"><div class="v">17,4 миллиарда рублей</div><div class="l">объём рынка ИИ-ассистентов для разработчиков в России за 2025 год, из них 80 процентов приходится на on-prem</div></div>
+          <div class="stat"><div class="v">25 процентов</div><div class="l">рост этого рынка за 2024 год, быстрее большинства соседних ИТ-направлений</div></div>
+          <div class="stat gold"><div class="v">90 компаний</div><div class="l">моя оценка числа организаций в России с тысячей и более разработчиков, расчёт ниже</div></div>
+        </div>
+
+        <h3>Как я считал эти девяносто компаний</h3>
+        <p class="calc-intro">Считаю по сегментам и складываю. Сначала смотрю на крупные ИТ-компании, потом отдельно на банки, телеком и госсектор, потому что у каждого сегмента своя логика подсчёта.</p>
+
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Результат</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>IT-компании и интеграторы России с численностью от тысячи человек, по рейтингу HighTime.Media на данных СБИС, 77 позиций</td><td>40 до 50</td></tr>
+              <tr><td>2</td><td>Поправка: не все тысяча сотрудников это разработчики, часть штата это продажи и поддержка</td><td>×0,55 до 0,65</td></tr>
+              <tr><td>3</td><td>Банки с тысячей и более разработчиков: системно значимые плюс следующий эшелон из 306 до 352 кредитных организаций в стране</td><td>15 до 20</td></tr>
+              <tr><td>4</td><td>Телеком: МТС, Билайн, МегаФон, Т2 и пара крупных региональных операторов</td><td>5 до 7</td></tr>
+              <tr><td>5</td><td>Госкорпорации с собственной крупной разработкой: Ростелеком, цифровые блоки РЖД и Росатома, ФНС и похожие</td><td>15 до 20</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Складываю все сегменты</td><td>75 до 110, беру 90</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="tbl-wrap">
+          <table>
+            <colgroup><col class="col-mid"><col class="col-wide"><col class="col-mid"></colgroup>
+            <thead><tr><th>Уровень</th><th>Как считал</th><th>Результат</th></tr></thead>
+            <tbody>
+              <tr class="hl"><td>Весь рынок</td><td>Все организации России с тысячей и более разработчиков: банки, телеком, IT и госсектор</td><td>75 до 110 компаний</td></tr>
+              <tr><td>Доступный рынок</td><td>Вычитаю компании с несовместимым стеком или без бюджетного цикла в этом году. Консервативно 70 до 80 процентов остаётся доступным</td><td>55 до 85 компаний</td></tr>
+              <tr class="gold-row"><td>Цель на год</td><td>Утроить базу от пяти до десяти клиентов даёт новых компаний за год</td><td>15 до 30 клиентов, это 17 до 40 процентов доступного рынка</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note gold"><b>Почему этот процент не выглядит как цифра под результат</b>Захватить от семнадцати до сорока процентов рынка за год выглядит много для обычного корпоративного продукта, где такой темп редко превышает однозначные проценты в год. Но наш рынок уже отфильтрован условием: ищут российское решение, потому что того требует закон. Это не холодный рынок, который нужно убеждать с нуля, а рынок, которому конкретная статья закона уже создала срочность выбора в нашу пользу именно в этом году.</div>
+
+        <div class="sources-box">
+          <div class="sb-title">Источники по этому разделу</div>
+          <ol>
+            <li>MTS AI, оценка рынка ИИ-ассистентов для разработчиков в России на 2025 год, через CNews, 7 апреля 2025 года</li>
+            <li>HighTime.Media, рейтинг 77 ИТ-компаний России с численностью от тысячи человек, по данным СБИС, 6 ноября 2025 года</li>
+            <li>Банк России, реестр действующих кредитных организаций, данные за 2025 год</li>
+            <li>ADPASS, рейтинг крупнейших ИТ-компаний России, данные о численности персонала</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="regulatory">
+      <div class="page-wrap">
+        <h2>Почему закон, а не маркетинг, работает в нашу пользу</h2>
+        <p class="lede">Дальше рассуждаю так, как обычно разбирают подобный вопрос: смотрю на конкретную норму, прикладываю её к ситуации конкурентов и только потом делаю вывод, что это значит для сделки.</p>
+
+        <p>Начинаю с указа президента номер 166. Он говорит просто: с 1 января 2025 года использовать иностранное программное обеспечение на значимых объектах критической информационной инфраструктуры запрещено. Прикладываю это к Claude и Cursor. У обоих нет размещения внутри российского периметра, значит формально они не допускаются в контур банков, телекома и энергетики. Это уже не вопрос предпочтений заказчика, а прямой правовой запрет.</p>
+
+        <p>Дальше смотрю на 187-й федеральный закон с обновлением, которое действует с 1 сентября 2025 года. Он требует, чтобы на значимых объектах критической инфраструктуры стояло программное обеспечение именно из реестра отечественного ПО. SourceCraft в реестре есть, но заявленный on-prem у него не подтверждён в промышленной эксплуатации. У Claude и Cursor реестровой записи нет вообще. Получается, что формально требование закрывает только тот, у кого on-prem не просто заявлен, а реально работает у клиентов.</p>
+
+        <p>Третий слой это ГОСТ Р 57580.1 и оценка по уровню доверия не ниже четвёртого, которая обязательна для банков согласно положениям Банка России номер 683-П, 757-П и 719-П. Здесь логика жёстче: чтобы пройти такую оценку, нужно дать доступ к исходному коду внутри периметра заказчика. Облачный сервис это сделать не может в принципе, потому что у него просто нет периметра заказчика, в который можно зайти с проверкой. Это структурный барьер, а не вопрос желания пройти сертификацию.</p>
+
+        <p>И последнее: 152-й федеральный закон вместе с приказом ФСБ номер 378 требует локализовать и криптографически защищать персональные данные. Это усиливает всё то же самое: инфраструктура должна стоять в российском контуре, а не просто быть доступной из России через интернет.</p>
+
+        <p>Если сложить все четыре нормы вместе, получается следующее. У нас остаётся единственный игрок в этом сравнении, который проходит весь путь без пометки «заявлено, но не доказано». Это стоит превратить в формальный критерий, по которому конкуренты отсеиваются ещё на этапе составления списка у банка, а не в финале конкурса.</p>
+
+        <div class="note warn"><b>Лучшее доказательство, какое только можно найти</b>Cursor на собственном сайте пишет прямым текстом: мы не предлагаем развёртывание на стороне клиента сегодня. Это не наша интерпретация, а признание самого вендора. У Claude от Anthropic on-prem нет вообще ни в каком виде, только облако и встраивание через сторонние платформы. SourceCraft заявил намерение работать по модели on-prem летом 2025 года, но независимого подтверждения промышленного внедрения такой версии в открытых источниках пока нет.</div>
+
+        <div class="sources-box">
+          <div class="sb-title">Нормы, на которые опираюсь</div>
+          <ol>
+            <li>Указ Президента РФ № 166 от 30 марта 2022 года, о мерах по обеспечению технологической независимости</li>
+            <li>Федеральный закон № 187-ФЗ о безопасности критической информационной инфраструктуры, с изменениями, вступившими в силу 1 сентября 2025 года</li>
+            <li>Положения Банка России № 683-П, № 757-П и № 719-П, требования к оценке соответствия ГОСТ Р 57580.1 и уровню доверия ОУД4</li>
+            <li>Федеральный закон № 152-ФЗ о персональных данных и приказ ФСБ России № 378</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="competitive">
+      <div class="page-wrap">
+        <h2>Сравнение с теми, с кем нас реально сравнивают клиенты</h2>
+
+        <div class="tbl-wrap">
+          <table>
+            <colgroup><col class="col-mid"><col class="col-wide"><col class="col-wide"><col class="col-wide"><col class="col-wide"></colgroup>
+            <thead><tr><th>Параметр</th><th>SourceCraft</th><th>Claude</th><th>Cursor</th><th>GigaCode</th></tr></thead>
+            <tbody>
+              <tr class="hl"><td>On-prem сегодня</td><td>Заявлен, промышленная эксплуатация публично не подтверждена</td><td><span class="tag-bad">Нет</span>, только облако</td><td><span class="tag-bad">Нет</span>, прямая цитата с сайта</td><td><span class="tag-good">Есть</span>, работает у текущих клиентов</td></tr>
+              <tr><td>В реестре отеч. ПО</td><td>Да</td><td>Нет</td><td>Нет</td><td>Да</td></tr>
+              <tr><td>Единый вход и доступ</td><td>Корпоративный аккаунт</td><td>Есть, уровень Enterprise</td><td>Есть, для команд и Enterprise</td><td>В составе on-prem контракта</td></tr>
+              <tr><td>Журналы аудита</td><td>Сводная статистика по рискам</td><td>Есть, уровень Enterprise</td><td>Есть, уровень Enterprise</td><td>Часть пакета on-prem</td></tr>
+              <tr><td>Цена</td><td>С апреля 2026 года, от 700 рублей</td><td>Место плюс плата за использование отдельно</td><td>40 долларов за пользователя в месяц для команд</td><td>От 1 699 рублей за пользователя в месяц плюс on-prem лицензия</td></tr>
+              <tr><td>Слабое место для нас</td><td>On-prem не доказан на масштабе</td><td>Данные вне российской юрисдикции</td><td>Признание отсутствия on-prem на сайте</td><td>Узнаваемость бренда ниже, чем у Яндекса или GitHub</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">Из всех, с кем нас сравнивают, мы единственные проходим регуляторный фильтр без пометки «заявлено, но не доказано». Это и есть критерий, по которому конкуренты должны отсеиваться ещё на этапе списка у банка.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="segmentation">
+      <div class="page-wrap">
+        <h2>Сегментация рынка и какой сегмент я беру первым</h2>
+
+        <div class="tbl-wrap">
+          <table>
+            <colgroup><col class="col-mid"><col class="col-narrow"><col class="col-narrow"><col class="col-wide"></colgroup>
+            <thead><tr><th>Сегмент</th><th>Компаний</th><th>Срочность</th><th>Почему</th></tr></thead>
+            <tbody>
+              <tr class="hl"><td>Банки</td><td>15 до 20</td><td>Высокая</td><td>187-й закон и оценка по уровню доверия задают срок законом, не пожеланием. Доля ИТ в расходах десяти крупнейших банков выросла до 27 процентов по данным Эксперт РА за февраль 2026 года</td></tr>
+              <tr><td>Телеком</td><td>5 до 7</td><td>Высокая</td><td>Те же требования по критической инфраструктуре, но компаний физически меньше</td></tr>
+              <tr><td>Госорганизации</td><td>15 до 20</td><td>Высокая, но дольше цикл</td><td>Реестр Минцифры обязателен, но закупка по 44-му и 223-му законам идёт медленнее банковской</td></tr>
+              <tr><td>IT-компании</td><td>40 до 50</td><td>Средняя</td><td>Самый большой сегмент по числу, но без законодательного принуждения. Конкуренция с Cursor и Claude здесь честная и для нас более тяжёлая</td></tr>
+              <tr><td>500 до 999 разработчиков</td><td>не оценивал</td><td>—</td><td>Формально вне условия задачи. Кандидат на второй год</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="verdict">
+          <h3>Первым беру банки</h3>
+          <p>Не потому, что банки это очевидный выбор, а потому что только здесь сходятся сразу три вещи: <b>жёсткий срок по закону</b>, <b>самый высокий бюджет на инструмент разработки</b> в расчёте на одного разработчика среди всех сегментов, и <b>наименьшее число конкурентов</b>, способных закрыть требование по сертификации исходного кода.</p>
+          <p>Телеком устроен так же, но компаний там меньше. Госсектор живёт по той же логике закона, но закупка идёт дольше. IT-компании это самый большой рынок по числу, но там придётся выигрывать чистым качеством продукта без помощи закона.</p>
+          <div class="skip"><b>Не беру первым:</b> IT-компании, там нет правового рычага. Госсектор, цикл закупки длиннее горизонта первых девяноста дней. Компании на 500 до 999 разработчиков, формально вне условия задачи.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="buyer">
+      <div class="page-wrap">
+        <h2>Кто принимает решение о покупке и чем болеет каждый</h2>
+        <p class="lede">В крупной корпоративной закупке решение принимает не один человек. По данным Gartner и Forrester, в комитете закупки обычно от шести до тринадцати участников, и почти девяносто процентов таких решений затрагивают несколько подразделений сразу. В семидесяти четырёх процентах случаев внутри комитета есть внутренний конфликт интересов, это данные опроса Gartner за август и сентябрь 2024 года. Сделка выигрывается не одним сильным сторонником, а тем, что у каждой роли в комитете закрыто именно её возражение.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <colgroup><col class="col-mid"><col class="col-wide"><col class="col-wide"><col class="col-wide"></colgroup>
+            <thead><tr><th>Роль</th><th>Боль</th><th>Критерий выбора</th><th>Возражение</th></tr></thead>
+            <tbody>
+              <tr><td>Разработчик</td><td>Инструмент мешает работать, а не помогает</td><td>Качество подсказок и скорость в привычной среде</td><td>Опять что-то медленное вместо обычного Cursor</td></tr>
+              <tr><td>Руководитель разработки</td><td>Скорость команды и долг, который оставляет за собой код от ИИ</td><td>Масштабируемость и понятные метрики продуктивности</td><td>Где доказательства, что это не создаёт больше ошибок, чем экономит времени</td></tr>
+              <tr class="hl"><td>Директор по ИТ</td><td>Соответствие стратегии и риск зависимости от одного поставщика</td><td>Дорожная карта поставщика и совместимость с экосистемой</td><td>Не хочу зависеть от одного поставщика во всём стеке</td></tr>
+              <tr><td>Служба безопасности</td><td>Утечка кода и недоверие к закрытой системе</td><td>On-prem, отсутствие обучения модели на данных клиента, журналы аудита</td><td>Код не должен покидать наш периметр</td></tr>
+              <tr><td>Архитектор</td><td>Совместимость с уже работающими системами</td><td>Программный интерфейс и поддержка собственных моделей</td><td>Как это встанет в нашу инфраструктуру без переписывания процессов</td></tr>
+              <tr class="hl"><td>Закупки</td><td>Юридические риски контракта</td><td>Наличие в реестре Минцифры и прозрачность цены</td><td>Почему именно этот поставщик, а не три альтернативы из реестра</td></tr>
+              <tr class="gold-row"><td>Финансовый директор</td><td>Непредсказуемые счета при оплате по факту использования, как у клиентов Cursor после смены тарификации</td><td>Предсказуемая стоимость владения и понятный срок окупаемости</td><td>Покажите цифры, а не обещания</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note gold"><b>Кто на самом деле платит</b>В банках и крупных госструктурах формальный держатель бюджета это обычно директор по ИТ или руководитель разработки, который защищает заявку перед финансовым директором, а не сам финансовый директор напрямую. Но именно его вопрос про срок окупаемости становится тем фильтром, который решает исход сделки на финальном этапе. Поэтому раздел про деньги дальше обращён именно к этому языку: к деньгам и срокам, а не к перечню функций.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="bet">
+      <div class="page-wrap">
+        <h2>Куда вложить ограниченный ресурс</h2>
+        <p class="lede">Условие предлагает выбор между качеством AI-агента, улучшением on-prem версии и развитием инструментов внедрения и аналитики. При цели утроить число клиентов именно там, где решает регуляторный барьер, это вопрос не вкуса, а того, какая инвестиция снимает больше реальных препятствий на пути к подписанному контракту.</p>
+
+        <div class="cards3">
+          <div class="card"><h4>Качество AI-агента: не выбираю первым</h4><p>Реальное преимущество против Cursor и Claude при прочих равных. Но в нашем сегменте сделка не доходит до сравнения качества моделей, если on-prem не закрыт: клиент физически не может протестировать продукт, который нельзя развернуть в его контуре.</p></div>
+          <div class="card"><h4>On-prem версия: выбираю</h4><p>Это не одна из функций, это пропуск на саму сделку. Каждый закрытый пункт чек-листа, будь то единый вход, разграничение доступа или журналы аудита, напрямую переводит компанию из «не можем рассматривать по закону» в «можем подписать договор».</p></div>
+          <div class="card"><h4>Инструменты внедрения: откладываю</h4><p>Критически важно для удержания уже подписанных клиентов на втором году, но не препятствие для новой сделки в первый год. Банк сначала должен иметь право использовать продукт, и только потом его волнует удобство аналитики.</p></div>
+        </div>
+
+        <p class="calc-intro">Чтобы не выбирать на ощущениях, считаю долю сделок, которые сегодня физически не доходят до конкурса без сертифицируемого on-prem.</p>
+
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Результат</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Доля рынка ИИ-ассистентов в России, которая приходится именно на on-prem, по данным MTS AI</td><td>80 процентов</td></tr>
+              <tr><td>2</td><td>Доля компаний в нашем списке целей, для которых on-prem это юридическое требование, а не предпочтение</td><td>45 до 52 процентов</td></tr>
+              <tr class="subtotal"><td>Вывод</td><td>On-prem открывает больше сделок, чем агент или аналитика добавляют ценности к уже открытым</td><td>Выбираю on-prem</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Как именно это делаю: сначала свои люди, потом отдельная команда</h3>
+        <p class="calc-intro">Здесь важно не путать инвестиционный приоритет с организационным решением. Не создаю новую команду с первого дня. Сначала проверяю гипотезу силами текущей команды, и только когда направление доказало себя деньгами, нанимаю отдельных людей именно под внешнюю часть продукта.</p>
+
+        <div class="phase-stage">
+          <div class="phase-row">
+            <div class="phase-box active">
+              <div class="ph-label">Фаза 1, ближайшие месяцы</div>
+              <h4>Выделяю отдельный поток работы внутри текущей команды</h4>
+              <p>Беру существующих инженеров и закрепляю за частью из них приоритет на on-prem чек-лист. Не нанимаю никого нового. Это проверка гипотезы на имеющемся ресурсе: если направление работает, это будет видно по числу закрытых сделок раньше, чем по новым людям в штате.</p>
+            </div>
+            <div class="phase-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+            <div class="phase-box">
+              <div class="ph-label">Фаза 2, после подтверждения</div>
+              <h4>Нанимаю отдельную команду под внешнюю часть продукта</h4>
+              <p>Когда поток на текущей команде показал результат, а спрос со стороны новых клиентов превышает то, что можно тянуть без потери темпа на других задачах, нанимаю людей именно под внешний коммерческий продукт. Это решение принимается по факту, не заранее.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note">Честная оговорка: это не значит, что качество агента не важно. Это значит, в каком порядке вкладывать ресурс. Качество агента становится следующим приоритетом сразу после того, как закрыт базовый корпоративный чек-лист, ориентировочно к концу второго квартала.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="onprem">
+      <div class="page-wrap">
+        <h2>Чего требуют крупные клиенты от on-prem версии и в каком порядке это делать</h2>
+
+        <div class="rank-list">
+          <div class="rank-item" style="background:rgba(33,160,56,0.06);"><div class="rn">1</div><div class="rname">Разграничение доступа и журналы аудита</div><div class="rbar-wrap"><div class="rbar" style="width:100%;"></div></div><div class="rval">без этого сделки нет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.06);"><div class="rn">2</div><div class="rname">Готовность к сертификации по уровню доверия</div><div class="rbar-wrap"><div class="rbar" style="width:96%;"></div></div><div class="rval">без этого сделки нет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.04);"><div class="rn">3</div><div class="rname">Единый вход и каталог пользователей заказчика</div><div class="rbar-wrap"><div class="rbar" style="width:88%;"></div></div><div class="rval">высокий приоритет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.04);"><div class="rn">4</div><div class="rname">Модели работают строго внутри периметра</div><div class="rbar-wrap"><div class="rbar" style="width:85%;"></div></div><div class="rval">высокий приоритет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.04);"><div class="rn">5</div><div class="rname">Совместимость с корпоративным прокси</div><div class="rbar-wrap"><div class="rbar" style="width:78%;"></div></div><div class="rval">высокий приоритет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.03);"><div class="rn">6</div><div class="rname">Отказоустойчивость при нагрузке от тысячи разработчиков</div><div class="rbar-wrap"><div class="rbar" style="width:70%;"></div></div><div class="rval">средний приоритет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.03);"><div class="rn">7</div><div class="rname">Резервное восстановление и сохранение конфигураций</div><div class="rbar-wrap"><div class="rbar" style="width:62%;"></div></div><div class="rval">средний приоритет</div></div>
+          <div class="rank-item" style="background:rgba(33,160,56,0.02);"><div class="rn">8</div><div class="rname">Полная изоляция без интернета вообще</div><div class="rbar-wrap"><div class="rbar" style="width:48%;"></div></div><div class="rval">узкий случай</div></div>
+        </div>
+
+        <div class="note">Порядок строю по простому принципу: что физически останавливает подписание контракта, а не что просто упоминается как пожелание. Разграничение доступа, журналы аудита и готовность к сертификации это не вопрос удобства интерфейса, а формальное условие прохождения процедуры, обязательной для банков с 2020 по 2022 год. Единый вход и работа моделей внутри периметра нужны для согласования службой безопасности. Отказоустойчивость важна на масштабе тысячи пользователей, но она не блокирует первую сделку, она блокирует продление после первого серьёзного сбоя. Полная изоляция от интернета это частный, но абсолютно жёсткий случай для оборонной промышленности и части энергетики, и не общее требование для всего сегмента.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="roi-client">
+      <div class="page-wrap">
+        <h2>Сколько клиент реально зарабатывает на внедрении</h2>
+        <p class="lede">Финансовый директор не покупает идею экономии времени, он покупает конкретное число с понятной методикой. Считаю в четыре шага: сначала узнаю, сколько компании стоит один разработчик, потом сколько времени реально высвобождается, затем спускаюсь до честного сценария и в конце сравниваю эффект с ценой решения.</p>
+
+        <h3>Шаг первый. Сколько разработчик стоит компании</h3>
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Значение</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Зарплата старшего разработчика в банковском секторе Москвы. Вилка по рынку 300 до 500 тысяч рублей в месяц, беру консервативную точку рядом с медианой Райффайзенбанка</td><td>350 000 руб/мес</td></tr>
+              <tr><td>2</td><td>Страховые взносы и сопутствующие расходы работодателя, обычная для России надбавка</td><td>×1,30</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Полная стоимость одного разработчика для компании</td><td>455 000 руб/мес</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Шаг второй. Сколько времени высвобождается</h3>
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Значение</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Среднее время, которое экономит AI-ассистент в неделю, по данным DX на 135 тысячах разработчиков из 435 компаний</td><td>3,9 ч/нед</td></tr>
+              <tr><td>2</td><td>Доля от стандартной сорокачасовой недели</td><td>10 процентов</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Теоретическая экономия на одного разработчика в год</td><td>546 000 руб/год</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Шаг третий. Спускаюсь до честного сценария</h3>
+        <p class="calc-intro">Не всё высвобожденное время превращается в пользу для бизнеса. Часть людей с купленной лицензией ей не пользуется, а часть сэкономленного времени уходит на дополнительную проверку кода. Учитываю обе поправки.</p>
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Значение</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Доля реально активных пользователей среди тех, кому куплена лицензия. Даже у лидеров рынка, по данным DX, это 60 до 70 процентов</td><td>×0,65</td></tr>
+              <tr><td>2</td><td>Доля сэкономленного времени, которая превращается в пользу, а не уходит на проверку кода. Беру консервативно</td><td>×0,50</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Реалистичный эффект на тысячу разработчиков в год</td><td>177 500 000 руб/год</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Шаг четвёртый. Сравниваю с ценой и получаю срок окупаемости</h3>
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Значение</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Стоимость лицензий на тысячу пользователей по базовому тарифу плюс надбавка за on-prem контракт такого масштаба</td><td>22 до 25 млн руб/год</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Эффект превышает стоимость решения примерно в семь, восемь раз. Срок возврата вложений от полутора до двух месяцев</td><td>7 до 8 раз</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note gold"><b>Почему этой цифре можно доверять</b>Семь, восемь раз по порядку величины совпадают с независимым исследованием IDC по заказу Microsoft, опубликованным в январе 2025 года: средняя окупаемость вложений в ИИ там составила три целых пять десятых раза, а у одного процента компаний доходила до восьми. Моя оценка выше медианы IDC, и это объяснимо: IDC считает по широкому межотраслевому набору компаний, а я считаю конкретно для дорогого корпоративного разработчика российского банка, где базовая зарплата выше среднего по их выборке. Совпадение порядка величины говорит о том, что расчёт устроен правильно, а не подогнан под красивый итог.</div>
+
+        <div class="note warn"><b>Но важно помнить</b>исследование METR, опубликованное в июле 2025 года на выборке из шестнадцати опытных разработчиков open-source проектов, показало обратный эффект: на хорошо знакомой кодовой базе опытные люди работали с ИИ на 19 процентов медленнее, хотя сами были уверены, что ускорились на 20 процентов. Это не опровергает мой расчёт, а уточняет, где он работает. METR изучал точечные задачи в давно знакомом коде, где ИИ добавляет время на проверку, а не экономит его. Цифра в 3,9 часа от DX это агрегат по широкому корпоративному использованию, где не всегда работают в идеально знакомом коде. Результат зависит от того, какие именно задачи решает команда, и об этом стоит говорить клиенту на этапе пилота.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="roi-product">
+      <div class="page-wrap">
+        <h2>Сколько стоит сама стратегия и когда она окупается для нас</h2>
+
+        <h3>Что нужно вложить в первый год</h3>
+        <div class="tbl-wrap">
+          <table>
+            <colgroup><col class="col-wide"><col class="col-mid"></colgroup>
+            <thead><tr><th>Статья</th><th>Объём</th></tr></thead>
+            <tbody>
+              <tr><td>Доля времени текущей команды разработки на доработку on-prem чек-листа: разграничение доступа, журналы аудита, единый вход, готовность к сертификации</td><td>оценка ресурса, не отдельный бюджет</td></tr>
+              <tr><td>Человек, который ведёт технические пилоты у банков постоянно, по 4 до 8 недель на цикл</td><td>одна полная ставка</td></tr>
+              <tr><td>Внешний аудит для сертификации по уровню доверия, разовые расходы</td><td>отдельная разовая статья</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Что возвращается при достижении цели</h3>
+        <div class="calc-table-wrap">
+          <table class="calc-table">
+            <thead><tr><th style="width:34px"></th><th>Что считаю</th><th>Значение</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>От 15 до 30 новых клиентов умножаю на средний контракт on-prem на тысячу пользователей в год</td><td>22 до 25 млн руб на клиента</td></tr>
+              <tr class="subtotal"><td>Итого</td><td>Дополнительная годовая выручка при выполнении цели утроения</td><td>330 до 750 млн руб/год</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="note">Разброс от 330 до 750 миллионов рублей отражает реальную неопределённость двух переменных: точное число клиентов на старте, пять или десять, и фактическую долю успешных пилотов, доходящих до полного контракта. Узкая, искусственно точная цифра здесь была бы менее честной, чем явная вилка.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="metrics">
+      <div class="page-wrap">
+        <h2>Какие метрики я буду отслеживать на каждом уровне</h2>
+
+        <h3>Продажи</h3>
+        <div class="metric-card"><div class="mc-left"><h4>Число квалифицированных возможностей в целевом сегменте</h4><p class="mc-desc">Запас воронки относительно цели, здоровым считается коэффициент 3 до 4 к квартальному плану по новым клиентам</p></div><div class="mc-value"><div class="num">×4</div><div class="cap">от цели</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Доля пилотов, переходящих в оплачиваемый контракт</h4><p class="mc-desc">Рабочая гипотеза, опубликованных данных по ИИ-инструментам разработки в России не нашёл</p></div><div class="mc-value"><div class="num">35 до 45%</div><div class="cap">конверсия</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Длительность цикла продажи в банках</h4><p class="mc-desc">С учётом времени на проверку безопасности и сертификацию</p></div><div class="mc-value"><div class="num">4 до 6</div><div class="cap">месяцев</div></div></div>
+
+        <h3>Внедрение</h3>
+        <div class="metric-card"><div class="mc-left"><h4>Длительность технического пилота</h4><p class="mc-desc">От первого технического доступа до решения продолжать или нет</p></div><div class="mc-value"><div class="num">4 до 8</div><div class="cap">недель</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Время до первой заметной пользы у клиента</h4><p class="mc-desc">Первая измеримая экономия времени видна на этом сроке</p></div><div class="mc-value"><div class="num">2</div><div class="cap">недели</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Доля пилотов, доходящих до полного внедрения</h4><p class="mc-desc">При правильно отобранном по регуляторному признаку списке клиентов</p></div><div class="mc-value"><div class="num">60%+</div><div class="cap">цель</div></div></div>
+
+        <h3>Использование</h3>
+        <div class="metric-card"><div class="mc-left"><h4>Доля активных пользователей от купленных лицензий</h4><p class="mc-desc">Через восемь недель после внедрения</p></div><div class="mc-value"><div class="num">65%+</div><div class="cap">цель</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Доля принятых подсказок при автодополнении</h4><p class="mc-desc">У нового клиента на старте, с ростом со временем</p></div><div class="mc-value"><div class="num">30 до 45%</div><div class="cap">старт</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Удержание пользователей неделя к неделе</h4><p class="mc-desc">Через четыре недели после начала использования</p></div><div class="mc-value"><div class="num">75%+</div><div class="cap">цель</div></div></div>
+
+        <h3>Продление контрактов</h3>
+        <div class="metric-card"><div class="mc-left"><h4>Рост выручки от существующих клиентов с учётом расширения</h4><p class="mc-desc">Медиана по рынку 101 до 102 процента, у лучших компаний 108 до 120. Цель выше медианы за счёт нашего преимущества в сегменте</p></div><div class="mc-value"><div class="num">110%+</div><div class="cap">ко второму году</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Удержание клиентов без учёта расширения</h4><p class="mc-desc">Медиана по рынку 86 до 88 процентов. Высокая стоимость переключения после сертификации поднимает цель выше медианы</p></div><div class="mc-value"><div class="num">90%+</div><div class="cap">цель</div></div></div>
+        <div class="metric-card"><div class="mc-left"><h4>Доля роста выручки именно за счёт расширения, не новых клиентов</h4><p class="mc-desc">Ко второму году работы стратегии</p></div><div class="mc-value"><div class="num">25%+</div><div class="cap">цель</div></div></div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="team-plan">
+      <div class="page-wrap">
+        <h2>Работа с командой: что делаю на тридцать, шестьдесят, девяносто дней, год и три года</h2>
+        <p class="lede">У продукта уже есть команда: инженеры, специалисты по машинному обучению, системные аналитики и продажи. Моя задача не нанимать заново, а направить уже существующий ресурс на закрытие конкретных пробелов в плагинах для сред разработки, командной строке, серверной части и агентных системах. Чем дальше горизонт, тем меньше конкретики, потому что планировать функции на три года вперёд было бы нечестно.</p>
+
+        <div class="horizon-track">
+
+          <div class="horizon-item">
+            <div class="horizon-dot">30<br>дн.</div>
+            <div class="horizon-head"><h4>Понять, где мы есть на самом деле</h4></div>
+            <div class="horizon-body">
+              <p>Первый месяц не про функции, а про честную картину текущего состояния. Сажусь с командой разработки и смотрю код плагинов для VS Code и JetBrains, командной строки и серверной части: что из корпоративного чек-листа уже сделано, что наполовину, чего нет вообще. Параллельно говорю с разработчиками, тимлидами и техническими директорами у действующих клиентов о том, что реально мешает им расширить использование продукта.</p>
+              <ul>
+                <li>Разговор с каждым действующим клиентом: что из разграничения доступа, единого входа и журналов аудита уже работает, а что обещано, но не сделано</li>
+                <li>Сверка с продажами: что конкретно звучит от клиентов, когда сделка срывается или затягивается, особенно в сравнении с SourceCraft, Claude и Cursor</li>
+                <li>Уточняю список из девяноста компаний-целей до конкретных названий, с приоритетом на банки</li>
+                <li>Смотрю существующие интеграции с корпоративными системами: что уже подключено и какие протоколы поддерживаются</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="horizon-item">
+            <div class="horizon-dot">60<br>дн.</div>
+            <div class="horizon-head"><h4>Закрыть то, что блокирует сделку прямо сейчас</h4></div>
+            <div class="horizon-body">
+              <p>Второй месяц это уже конкретные задачи в работе у инженерной команды, без дополнительного найма. Беру за основу список приоритетов on-prem и довожу до рабочего состояния три верхних пункта.</p>
+              <ul>
+                <li>Разграничение доступа по ролям и журналы аудита для on-prem версии в активной разработке: это решает задачу номер один из списка приоритетов</li>
+                <li>Запускаю формальную подготовку к сертификации по уровню доверия, собираю требования и нахожу аудитора, потому что сама процедура растягивается на несколько месяцев</li>
+                <li>Делаю повторяемый процесс технического пилота на 4 до 8 недель вместо того, чтобы каждую сделку вести вручную</li>
+                <li>Вместе с продажами формулирую короткую сравнительную таблицу против SourceCraft, Claude и Cursor для рабочих встреч с клиентами</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="horizon-item">
+            <div class="horizon-dot">90<br>дн.</div>
+            <div class="horizon-head"><h4>Запустить первую волну сделок по новому процессу</h4></div>
+            <div class="horizon-body">
+              <p>К третьему месяцу нужен не план, а первые результаты, на которые можно опереться в разговоре с руководством.</p>
+              <ul>
+                <li>3 до 5 параллельных технических пилотов у банков из уточнённого списка целей</li>
+                <li>Единый вход и работа моделей строго внутри периметра клиента готовы как стандартная часть on-prem поставки</li>
+                <li>Первый отчёт по воронке продаж: соотношение пилотов к закрытым сделкам в сравнении с гипотезой в 35 до 45 процентов</li>
+                <li>Показываю руководству расчёт окупаемости для клиента и для продукта, подтверждённый цифрами первых пилотов или честно скорректированный</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="horizon-item">
+            <div class="horizon-dot">1<br>год</div>
+            <div class="horizon-head"><h4>Закрыть базовый набор функций и перейти к качеству агента</h4></div>
+            <div class="horizon-body">
+              <p>В первой половине года основная работа команды это закончить on-prem чек-лист целиком: отказоустойчивость под тысячу пользователей, резервное восстановление, совместимость с корпоративным прокси. Получаю сертификацию по уровню доверия, это главная веха года, без неё часть банков просто не подпишет договор. Во второй половине года, когда базовый чек-лист закрыт, переключаю часть ресурса на качество AI-агента, потому что это становится важным для удержания контрактов, открытых в первой половине года.</p>
+              <ul>
+                <li>Первый и второй квартал: завершение разграничения доступа, единого входа, журналов аудита и работы моделей внутри периметра, полностью, не частично</li>
+                <li>Получение сертификации по уровню доверия, ключевая веха года</li>
+                <li>Третий и четвёртый квартал: качество AI-агента, инструменты внедрения и базовая аналитика для тимлидов клиентов</li>
+                <li>К концу года 15 до 30 новых клиентов: цель утроения выполнена или скорректирована с понятной причиной</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="horizon-item far">
+            <div class="horizon-dot">3<br>года</div>
+            <div class="horizon-head"><h4>Направления, а не конкретные функции</h4></div>
+            <div class="horizon-body">
+              <p>На горизонте трёх лет не расписываю функции, потому что рынок и конкуренты за это время заметно изменятся. Но направление понятно уже сейчас.</p>
+              <ul>
+                <li>Расширение рынка вниз на компании от пятисот разработчиков, когда сегмент тысячи и более насыщен</li>
+                <li>Превращение высокой стоимости переключения после сертификации в постоянное преимущество не только в банках, но и в телекоме и госсекторе</li>
+                <li>Развитие аналитики использования до уровня, на котором руководитель разработки клиента видит реальную пользу в цифрах, а не верит на слово</li>
+                <li>Постоянное сокращение разрыва в качестве модели относительно лучших мировых решений, без этого преимущество в законе со временем перестанет быть единственным аргументом</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="risks">
+      <div class="page-wrap">
+        <h2>На чём строится расчёт</h2>
+        <p class="lede">Весь план опирается на несколько допущений. Если хотя бы одно из них не подтвердится, цифры нужно пересчитать, и вот какие это допущения.</p>
+
+        <div class="risk-grid">
+          <div class="risk"><div class="rk-num">Допущение 1</div><p>SourceCraft не докажет промышленный on-prem раньше, чем мы закрепимся в банковском сегменте. Если Яндекс закроет это быстрее ожидаемого, наше главное структурное преимущество частично исчезает. Стоит отслеживать публичные анонсы конкурента каждый квартал.</p></div>
+          <div class="risk"><div class="rk-num">Допущение 2</div><p>Сертификация по уровню доверия укладывается в обычные сроки. Эта процедура в России исторически растягивается, и если так случится здесь, цель в 15 до 30 новых клиентов за год станет нереалистичной без пересмотра темпа.</p></div>
+          <div class="risk"><div class="rk-num">Допущение 3</div><p>На старте у нас действительно от пяти до десяти клиентов. Точное число не дано в условии, и если фактическая база окажется меньше, например три клиента, цель утроения это девять новых клиентов, а не пятнадцать-тридцать.</p></div>
+          <div class="risk"><div class="rk-num">Допущение 4</div><p>Окупаемость у клиента не ниже расчётной. Исследование METR показывает сценарии, где ИИ не экономит время опытных разработчиков, а тратит его. Если задачи у конкретного клиента ближе к этому сценарию, обещанная окупаемость в 7 до 8 раз не подтвердится, и об этом нужно говорить уже на этапе пилота.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="page-wrap">
+        <div>GigaCode. Стратегия утроения числа корпоративных клиентов за год</div>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<div class="totop" id="toTop" role="button" aria-label="Наверх" tabindex="0">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+</div>
+
+<script>
+(function(){
+  var links = document.querySelectorAll('.sb-link');
+  var sections = Array.prototype.map.call(links, function(l){ return document.getElementById(l.dataset.target); });
+  var sidebar = document.getElementById('sidebar');
+  var menuBtn = document.getElementById('menuBtn');
+  var scrim = document.getElementById('scrim');
+  var totop = document.getElementById('toTop');
+  var progressFill = document.getElementById('progressFill');
+
+  function closeMenu(){ sidebar.classList.remove('open'); scrim.classList.remove('show'); }
+  function openMenu(){ sidebar.classList.add('open'); scrim.classList.add('show'); }
+  menuBtn.addEventListener('click', function(){ sidebar.classList.contains('open') ? closeMenu() : openMenu(); });
+  menuBtn.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); menuBtn.click(); } });
+  scrim.addEventListener('click', closeMenu);
+
+  links.forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      var target = document.getElementById(link.dataset.target);
+      if(target){
+        var offset = window.innerWidth <= 920 ? 64 : 24;
+        var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({top: top, behavior: 'smooth'});
+      }
+      closeMenu();
+    });
+    link.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); link.click(); } });
+  });
+
+  function onScroll(){
+    var scrollY = window.pageYOffset;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    progressFill.style.width = (docH > 0 ? (scrollY / docH * 100) : 0) + '%';
+    totop.classList.toggle('show', scrollY > 600);
+    var current = null;
+    var probe = scrollY + window.innerHeight * 0.28;
+    sections.forEach(function(sec){ if(!sec) return; if(probe >= sec.offsetTop) current = sec.id; });
+    links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === current); });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll);
+  onScroll();
+
+  totop.addEventListener('click', function(){ window.scrollTo({top:0, behavior:'smooth'}); });
+  totop.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ window.scrollTo({top:0, behavior:'smooth'}); } });
+})();
+</script>
+
+</body>
+</html>
